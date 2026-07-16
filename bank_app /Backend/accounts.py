@@ -1,7 +1,5 @@
 
 from decimal import Decimal
-from .user import User
-from .transaction import Transaction
 
 #Class for creation of account objects
 #including associated userId so that each account is connected back to a user
@@ -10,18 +8,13 @@ class Account() :
     
 
     #Initialize account
-    def __init__(self, userId, accountType, balance=None, accountId="", transactions=None) :
+    def __init__(self, userId, accountType, balance=None, accountId="") :
 
-        #Storage of account id, balance, account type, associated user id, and creation and storage of empty transaction list
+        #Storage of account id, balance, account type, and associated user id
         self.__accountId = accountId
         self.__balance = Decimal(str(balance)) if balance is not None else Decimal("0.00")
         self.__accountType = accountType
         self.__userId = userId
-
-        # review instances of this list
-        # no longer in use due to transaction repository
-        # review code like dict, or whnever account details returned to get rid of useless code
-        self.__transactions = transactions or []
 
     
     
@@ -46,14 +39,6 @@ class Account() :
         return self.__accountId
     
     
-    #method for encapsulation and addition of transactions to the account in use
-    def addTransaction(self, transaction) :
-        self.__transactions.append(transaction)
-    
-    #mthod for encapsulation and return of transaction list to be shown to the user
-    def getTransactions(self) :
-        return self.__transactions
-    
     #method for encapsulation and showcase of current account details
     def getAccountDetails(self):
         return {
@@ -61,7 +46,6 @@ class Account() :
             "Account Type": self.__accountType,
             "User ID": self.__userId,
             "Balance": self.__balance,
-            "Transactions": self.__transactions,
         }
     
     def setAccountId(self, account_id):
@@ -74,10 +58,6 @@ class Account() :
             "userId": self.__userId,
             "accountType": self.__accountType,
             "balance": float(self.__balance),
-            "transactions": [
-                transaction.to_dict() if hasattr(transaction, "to_dict") else transaction
-                for transaction in self.__transactions
-            ],
         }
     
     #mthod for conversion back into account object
@@ -88,7 +68,6 @@ class Account() :
             accountType=dc["accountType"],
             balance=dc["balance"],
             accountId=str(dc["_id"]),
-            transactions=dc.get("transactions", []),
         )
     
     

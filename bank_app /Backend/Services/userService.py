@@ -16,14 +16,6 @@ class UserService:
         userId = await self.repository.create(user.toDict())
         user.setUserId(userId)
         return user
-    
-    #starts Admin creation process with model call, then associated calls to repository
-    #for mongoDb storage
-    async def createAdmin(self, name, email, password, role):
-        user = AdminUser(name, email, password)
-        userId = await self.repository.create(user.toDict())
-        user.setUserId(userId)
-        return user
 
     # begins login process for the user
     async def loginUser(self, email: str, password: str):

@@ -6,11 +6,10 @@ from datetime import datetime, timezone
 class Transaction:
 
     #constructor for initialization of a transaction
-    def __init__(self, tranType, amount, accountId, transactionId=None, createdAt=None) :
+    def __init__(self, tranType, amount, accountId, createdAt=None) :
         self.__tranType = tranType
         self.__amount = Decimal(str(amount))
         self.__accountId = accountId
-        self.__transactionId = transactionId
         self.__createdAt = createdAt or datetime.now(timezone.utc)
 
     #method for encapsulation and returning transaction type
@@ -24,15 +23,6 @@ class Transaction:
     #method for encapsulation and returning associated account id for transaction
     def getAccountId(self):
         return self.__accountId
-
-    #method for encapsulation and returning transaction id
-    def getTransactionId(self):
-        return self.__transactionId
-
-    #method for encapsulation and setting transaction id
-    def setTransactionId(self, transaction_id):
-        # called once, after Mongo assigns the real _id on insert
-        self.__transactionId = transaction_id
 
     #method for encapsulation and get timestamp for transaction creation
     def getCreatedAt(self):
@@ -54,6 +44,5 @@ class Transaction:
             tranType=dc["type"],
             amount=dc["amount"],
             accountId=dc["account_id"],
-            transactionId=str(dc["_id"]),
             createdAt=dc.get("created_at"),
         )

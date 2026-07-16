@@ -43,13 +43,6 @@ class AccountController:
             raise HTTPException(status_code=400, detail="user id is required")
         return resolved_user_id
 
-    #initialization of Account service to use
-    def __init__(self, service: AccountService):
-        self.service = service
-
-    #setup of app api
-    #app = FastAPI()
-
     # Api to read and list all of users banking accounts 
     @router.get("", response_model=list[AccountOut])
     async def listAccounts(user_id: str | None = None, userId: str | None = None):

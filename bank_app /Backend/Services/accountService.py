@@ -1,12 +1,8 @@
 from ..accounts import Account
 from ..Repositories.accountRepository import AccountRepository
 from ..Repositories.transactionRepository import TransactionRepository
-from ..user import User
 from ..transaction import Transaction
 from decimal import Decimal
-
-#creating instance of account repository class to use its associated methods
-repository = AccountRepository
 
 #Class used to service application and call needed methods when creating and managing accounts
 #and any additional logic

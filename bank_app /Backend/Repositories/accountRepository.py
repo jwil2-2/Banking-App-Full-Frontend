@@ -28,17 +28,4 @@ class AccountRepository:
             {"_id": ObjectId(accountId)},
              {"$inc": {"balance": float(delta)}}
         )
-    
-    #method to add transaction to associated with accounntId to mongo Db
-    async def addTransaction(self, accountId: str, transactionDc: dict) -> None:
-        await accounts_collection.update_one(
-            {"_id": ObjectId(accountId)},
-            {"$push": {"transactions": transactionDc}}
-        )
-
-    async def getTransactions(self, accountId: str) -> list[dict]:
-        account = await self.getById(accountId)
-        if not account:
-            return []
-        return account.get("transactions", [])
    
