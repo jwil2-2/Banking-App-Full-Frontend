@@ -15,10 +15,14 @@ class AccountService:
 
     #starts account creation process with model call, then associated calls to repository
     #for mongoDb storage
-    async def createAccount(self, user: User, accountType: str):
-        account = Account(user.getUserId(), accountType)
+    async def createAccount(self, userId, accountType: str):
+        account = Account(userId, accountType)
         accountId = await self.repository.create(account.toDict())
-        account._id = accountId
+        if not accountId:
+            raise RuntimeError("Account repository did not return an id")
+        account.setAccountId(accountId)
+        if not account.getAccountId():
+            raise RuntimeError("Account id was not assigned")
         return account
     
     #starts process of returning all account for user with assosciated call to repository

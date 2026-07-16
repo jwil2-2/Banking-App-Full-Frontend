@@ -50,8 +50,11 @@ class AccountController:
     async def create_account(payload: CreateAccountRequest, user_id: str):
     # TEMPORARY: user_id as a query param until auth exists (see list_accounts note)
         account = await _accountService.createAccount(user_id, payload.account_type)
+        account_id = account.getAccountId()
+        if not account_id:
+            raise ValueError("Account id missing after creation")
         return AccountController.AccountOut(
-            id=account.getAccountId(),
+            id=str(account_id),
             account_type=account.getAccType(),
             user_id=account.getUserId(),
             balance=account.getBalance(),
