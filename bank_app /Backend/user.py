@@ -80,7 +80,7 @@ class User:
     dc = {
       "name": self.__name,
       "email": self.__email,
-      "password": self.__password,   # already hashed
+      "password": self.__password,
       "role": self.__role,
     }
     return dc

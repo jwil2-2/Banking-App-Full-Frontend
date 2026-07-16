@@ -91,20 +91,6 @@ function AuthPanel({
             />
           </label>
 
-          <details className="role-details">
-            <summary>Advanced: account role</summary>
-            <label>
-              Role
-              <select
-                value={signup.role}
-                onChange={(event) => onSignupChange({ ...signup, role: event.target.value })}
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-            </label>
-          </details>
-
           <button type="submit" disabled={isBusy}>
             {isBusy ? 'Working...' : 'Create account'}
           </button>
