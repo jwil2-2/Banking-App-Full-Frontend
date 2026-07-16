@@ -59,7 +59,7 @@ export function AccountProvider({ children }) {
 
     ;(async () => {
       try {
-        const accountList = await requestJson(`/api/accounts?userId=${userId}`)
+        const accountList = await requestJson('/api/accounts')
         if (cancelled) {
           return
         }
@@ -103,7 +103,7 @@ export function AccountProvider({ children }) {
         return []
       }
 
-      const accountList = await requestJson(`/api/accounts?userId=${userId}`)
+      const accountList = await requestJson('/api/accounts')
       setAccounts(accountList)
 
       const preferred = preferredAccountId || selectedAccountId || readSelectedAccountId()
@@ -147,7 +147,7 @@ export function AccountProvider({ children }) {
 
       setIsBusy(true)
       try {
-        const account = await requestJson(`/api/accounts?userId=${userId}`, {
+        const account = await requestJson('/api/accounts', {
           method: 'POST',
           body: JSON.stringify({ account_type: accountType }),
         })

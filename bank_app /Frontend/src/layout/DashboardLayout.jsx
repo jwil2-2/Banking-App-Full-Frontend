@@ -3,7 +3,7 @@ import { useAuth } from '../auth/useAuth.js'
 import { useAccounts } from '../accounts/useAccounts.js'
 import StatusBanner from '../components/StatusBanner.jsx'
 
-const navItems = [
+const baseNavItems = [
   { to: '/overview', label: 'Overview' },
   { to: '/accounts/new', label: 'Open Account' },
   { to: '/accounts/transfer', label: 'Move Money' },
@@ -11,9 +11,13 @@ const navItems = [
 ]
 
 function DashboardLayout() {
-  const { user, logout } = useAuth()
+  const { user, logout, isAdmin } = useAuth()
   const { message, messageType } = useAccounts()
   const navigate = useNavigate()
+
+  const navItems = isAdmin
+    ? [...baseNavItems, { to: '/admin/users', label: 'Admin Users' }]
+    : baseNavItems
 
   const handleLogout = () => {
     logout()

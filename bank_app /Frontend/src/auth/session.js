@@ -1,10 +1,6 @@
 const USER_KEY = 'bank_app_user'
-// TODO(auth): replace USER_KEY with access/refresh token keys when JWT arrives.
+const ACCESS_TOKEN_KEY = 'bank_app_access_token'
 
-/**
- * Local session helpers. Today we store the user object from login/signup.
- * Later: store tokens only and fetch the user profile from a protected endpoint.
- */
 export function getUser() {
   try {
     const raw = localStorage.getItem(USER_KEY)
@@ -18,9 +14,22 @@ export function setUser(user) {
   localStorage.setItem(USER_KEY, JSON.stringify(user))
 }
 
+export function getAccessToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY)
+}
+
+export function setAccessToken(token) {
+  localStorage.setItem(ACCESS_TOKEN_KEY, token)
+}
+
+export function setSession({ user, accessToken }) {
+  setUser(user)
+  setAccessToken(accessToken)
+}
+
 export function clearUser() {
   localStorage.removeItem(USER_KEY)
-  // TODO(auth): also clear access/refresh tokens here.
+  localStorage.removeItem(ACCESS_TOKEN_KEY)
   try {
     sessionStorage.removeItem('bank_app_selected_account')
   } catch {
@@ -28,7 +37,6 @@ export function clearUser() {
   }
 }
 
-export function getAccessToken() {
-  // TODO(auth): return localStorage.getItem('bank_app_access_token')
-  return null
+export function isAuthenticated() {
+  return Boolean(getAccessToken() && getUser()?.id)
 }

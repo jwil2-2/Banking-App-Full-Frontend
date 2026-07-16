@@ -486,6 +486,19 @@
   color: #fbbf24;
 }
 
+.loading-state {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  color: rgba(226, 232, 240, 0.86);
+  padding: 24px;
+}
+
+.admin-user-list {
+  display: grid;
+  gap: 16px;
+}
+
 @media (max-width: 960px) {
   .auth-shell,
   .dashboard-shell {
