@@ -29,11 +29,6 @@ class UserController:
         email: str
         password: str
 
-
-    #initialization of Account service to use
-    def __init__(self, service: UserService):
-        self.service = service
-
     # Api to create new banking account for user
     @router.post("", response_model=UserOut, status_code=201)
     async def create_user(payload: CreateUserRequest):

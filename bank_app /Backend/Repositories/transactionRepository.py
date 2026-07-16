@@ -1,5 +1,3 @@
-from bson import ObjectId
-
 from ..db import transactions_collection
 from ..transaction import Transaction
 
@@ -10,10 +8,6 @@ class TransactionRepository:
     async def create(self, transaction_dc: dict) -> str:
         result = await transactions_collection.insert_one(transaction_dc)
         return str(result.inserted_id)
-
-    #call to mongoDB to return transaction by given id
-    async def getById(self, transactionId: str) -> dict | None:
-        return await transactions_collection.find_one({"_id": ObjectId(transactionId)})
 
     #call to mongoDB to return all transactions for associated bank account
     async def getAllForAccount(self, accountId: str) -> list[Transaction]:
