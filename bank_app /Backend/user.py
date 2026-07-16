@@ -9,6 +9,7 @@ class User:
     self.setEmail(email)
     self.setPassword(password)
     self.__role = role
+    self.__userId = userId
 
 
   # Method for encapsulation and returning name
@@ -90,7 +91,6 @@ class User:
     targetCls = AdminUser if dc.get("role") == "admin" else User
     user = targetCls.__new__(targetCls) # bypass __init__, avoids re-validating/re-hashing
     user._User__name = dc["name"]
-    user.__User__name = dc["name"]
     user._User__email = dc["email"]
     user._User__password = dc["password"]
     user._User__role = dc.get("role", "user")
