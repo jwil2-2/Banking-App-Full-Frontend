@@ -26,6 +26,10 @@ class User:
   # Method for encapsulation and returning userId
   def getUserId(self):
     return self.__userId
+  
+  # Method for encapsulation and returning userId
+  def getRole(self):
+    return self.__role
 
   # Method for encapsulation and setting email with specific rules
   def setEmail(self, email):
