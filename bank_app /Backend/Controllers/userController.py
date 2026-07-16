@@ -45,6 +45,7 @@ class UserController:
             role=user.getRole(),
             )
 
+    #api call to  login created user with correct credentials pprovided
     @router.post("/login", response_model=UserOut)
     async def login(payload: LoginRequest):
         try:
