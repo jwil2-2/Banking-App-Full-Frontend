@@ -11,9 +11,11 @@ class UserRepository:
         result = await users_collection.insert_one(user_dc)
         return str(result.inserted_id)
 
+    #call to mongoDb to get user by associated email
     async def getByEmail(self, email: str) -> dict | None:
         return await users_collection.find_one({"email": email})
 
+    #call to mongoDb to get user by specific id
     async def getById(self, userId: str) -> dict | None:
         return await users_collection.find_one({"_id": ObjectId(userId)})
      

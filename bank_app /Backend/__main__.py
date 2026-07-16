@@ -36,7 +36,7 @@ app.add_middleware(
 _accountRepository = AccountRepository()
 _userRepository = UserRepository()
 _transactionRepository = TransactionRepository()
-accService = AccountService(_accountRepository)
+accService = AccountService(_accountRepository, _transactionRepository)
 
 
 #class for bank business logic for transactions

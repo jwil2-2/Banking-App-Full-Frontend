@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import AuthPanel from './components/AuthPanel.jsx'
+import AccountPanel from './components/AccountPanel.jsx'
+import StatusBanner from './components/StatusBanner.jsx'
 import './App.css'
 
 const API_BASE = import.meta.env.VITE_API_URL
@@ -15,12 +18,19 @@ const emptyLogin = {
   password: '',
 }
 
+const emptyAmount = ''
+
 function App() {
   const [signup, setSignup] = useState(emptySignup)
   const [login, setLogin] = useState(emptyLogin)
   const [activeTab, setActiveTab] = useState('signup')
   const [accountType, setAccountType] = useState('Checking')
+  const [depositAmount, setDepositAmount] = useState(emptyAmount)
+  const [withdrawAmount, setWithdrawAmount] = useState(emptyAmount)
   const [currentUser, setCurrentUser] = useState(null)
+  const [accounts, setAccounts] = useState([])
+  const [selectedAccountId, setSelectedAccountId] = useState('')
+  const [selectedAccount, setSelectedAccount] = useState(null)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState('neutral')
   const [isBusy, setIsBusy] = useState(false)
@@ -51,6 +61,50 @@ function App() {
     return payload
   }
 
+  const loadAccounts = async (userId, preferredAccountId = '') => {
+    if (!userId) {
+      setAccounts([])
+      setSelectedAccountId('')
+      setSelectedAccount(null)
+      return
+    }
+
+    const accountList = await requestJson(`/api/accounts?userId=${userId}`)
+    setAccounts(accountList)
+
+    const nextAccountId = preferredAccountId || accountList[0]?.id || ''
+    setSelectedAccountId(nextAccountId)
+
+    if (nextAccountId) {
+      const accountDetail = await requestJson(`/api/accounts/${nextAccountId}`)
+      setSelectedAccount(accountDetail)
+    } else {
+      setSelectedAccount(null)
+    }
+  }
+
+  useEffect(() => {
+    if (!currentUser?.id) {
+      return
+    }
+
+    loadAccounts(currentUser.id).catch((error) => showMessage(error.message, 'error'))
+  }, [currentUser?.id])
+
+  const selectedAccountSummary = useMemo(() => {
+    if (!selectedAccount) {
+      return null
+    }
+
+    return {
+      id: selectedAccount.id,
+      account_type: selectedAccount.account_type,
+      user_id: selectedAccount.user_id,
+      balance: selectedAccount.balance,
+      transactions: selectedAccount.transactions ?? [],
+    }
+  }, [selectedAccount])
+
   const handleSignupSubmit = async (event) => {
     event.preventDefault()
     setIsBusy(true)
@@ -62,7 +116,7 @@ function App() {
       })
 
       setCurrentUser(user)
-      showMessage(`Created ${user.name}. You can log in or create an account next.`, 'success')
+      showMessage(`Created ${user.name}. You can start opening accounts now.`, 'success')
       setSignup(emptySignup)
       setActiveTab('login')
     } catch (error) {
@@ -94,6 +148,7 @@ function App() {
 
   const handleCreateAccount = async (event) => {
     event.preventDefault()
+
     if (!currentUser?.id) {
       showMessage('Create or log in to a user first.', 'error')
       return
@@ -102,15 +157,93 @@ function App() {
     setIsBusy(true)
 
     try {
-      const account = await requestJson(`/api/accounts?user_id=${currentUser.id}`, {
+      const account = await requestJson(`/api/accounts?userId=${currentUser.id}`, {
         method: 'POST',
         body: JSON.stringify({ account_type: accountType }),
       })
 
-      showMessage(
-        `${account.account_type} account created for ${currentUser.name}.`,
-        'success',
-      )
+      await loadAccounts(currentUser.id, account.id)
+      showMessage(`${account.account_type} account created for ${currentUser.name}.`, 'success')
+    } catch (error) {
+      showMessage(error.message, 'error')
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  const handleSelectAccount = async (accountId) => {
+    setSelectedAccountId(accountId)
+
+    try {
+      const accountDetail = await requestJson(`/api/accounts/${accountId}`)
+      setSelectedAccount(accountDetail)
+    } catch (error) {
+      showMessage(error.message, 'error')
+    }
+  }
+
+  const handleDeposit = async (event) => {
+    event.preventDefault()
+
+    if (!selectedAccountId) {
+      showMessage('Select an account first.', 'error')
+      return
+    }
+
+    setIsBusy(true)
+
+    try {
+      await requestJson(`/api/accounts/${selectedAccountId}/deposit`, {
+        method: 'POST',
+        body: JSON.stringify({ amount: depositAmount }),
+      })
+
+      await loadAccounts(currentUser.id, selectedAccountId)
+      setDepositAmount(emptyAmount)
+      showMessage('Deposit completed.', 'success')
+    } catch (error) {
+      showMessage(error.message, 'error')
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  const handleWithdraw = async (event) => {
+    event.preventDefault()
+
+    if (!selectedAccountId) {
+      showMessage('Select an account first.', 'error')
+      return
+    }
+
+    setIsBusy(true)
+
+    try {
+      await requestJson(`/api/accounts/${selectedAccountId}/withdraw`, {
+        method: 'POST',
+        body: JSON.stringify({ amount: withdrawAmount }),
+      })
+
+      await loadAccounts(currentUser.id, selectedAccountId)
+      setWithdrawAmount(emptyAmount)
+      showMessage('Withdrawal completed.', 'success')
+    } catch (error) {
+      showMessage(error.message, 'error')
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  const handleRefreshAccount = async () => {
+    if (!currentUser?.id || !selectedAccountId) {
+      return
+    }
+
+    setIsBusy(true)
+
+    try {
+      await loadAccounts(currentUser.id, selectedAccountId)
+      showMessage('Account data refreshed.', 'success')
     } catch (error) {
       showMessage(error.message, 'error')
     } finally {
@@ -123,10 +256,10 @@ function App() {
       <section className="hero-panel">
         <div className="hero-copy">
           <p className="eyebrow">Bank app starter</p>
-          <h1>Simple user onboarding for your banking flow.</h1>
+          <h1>Simple banking flow, now with accounts and transactions.</h1>
           <p className="lede">
-            Create a user, sign in, and then open the door to account creation.
-            This is the smallest useful frontend for building the rest of the app.
+            Create a user, log in, open accounts, and run deposits or withdrawals.
+            The page is split into small components so each step stays easy to follow.
           </p>
 
           <div className="feature-row">
@@ -137,13 +270,13 @@ function App() {
             </article>
             <article>
               <span>2</span>
-              <strong>Log in</strong>
-              <p>Confirm the credentials and load the active user.</p>
+              <strong>Open an account</strong>
+              <p>Create checking or savings accounts for the logged-in user.</p>
             </article>
             <article>
               <span>3</span>
-              <strong>Open accounts</strong>
-              <p>Use the returned user id to begin checking or savings accounts.</p>
+              <strong>Move money</strong>
+              <p>Deposit, withdraw, and inspect the live transaction history.</p>
             </article>
           </div>
         </div>
@@ -156,8 +289,8 @@ function App() {
           </p>
           <div className="status-grid">
             <div>
-              <span>Mode</span>
-              <strong>{activeTab}</strong>
+              <span>Accounts</span>
+              <strong>{accounts.length}</strong>
             </div>
             <div>
               <span>Role</span>
@@ -168,148 +301,39 @@ function App() {
       </section>
 
       <section className="forms-grid">
-        <div className="panel">
-          <div className="tab-row" role="tablist" aria-label="Authentication modes">
-            <button
-              type="button"
-              className={activeTab === 'signup' ? 'tab active' : 'tab'}
-              onClick={() => setActiveTab('signup')}
-            >
-              Create user
-            </button>
-            <button
-              type="button"
-              className={activeTab === 'login' ? 'tab active' : 'tab'}
-              onClick={() => setActiveTab('login')}
-            >
-              Log in
-            </button>
-          </div>
+        <AuthPanel
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          signup={signup}
+          onSignupChange={setSignup}
+          login={login}
+          onLoginChange={setLogin}
+          onSignupSubmit={handleSignupSubmit}
+          onLoginSubmit={handleLoginSubmit}
+          isBusy={isBusy}
+        />
 
-          {activeTab === 'signup' ? (
-            <form className="auth-form" onSubmit={handleSignupSubmit}>
-              <label>
-                Full name
-                <input
-                  type="text"
-                  value={signup.name}
-                  onChange={(event) => setSignup({ ...signup, name: event.target.value })}
-                  placeholder="Jordan Lee"
-                  required
-                />
-              </label>
-
-              <label>
-                Email
-                <input
-                  type="email"
-                  value={signup.email}
-                  onChange={(event) => setSignup({ ...signup, email: event.target.value })}
-                  placeholder="jordan@example.com"
-                  required
-                />
-              </label>
-
-              <label>
-                Password
-                <input
-                  type="password"
-                  value={signup.password}
-                  onChange={(event) => setSignup({ ...signup, password: event.target.value })}
-                  placeholder="Strong password"
-                  required
-                />
-              </label>
-
-              <label>
-                Role
-                <select
-                  value={signup.role}
-                  onChange={(event) => setSignup({ ...signup, role: event.target.value })}
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </label>
-
-              <button type="submit" disabled={isBusy}>
-                {isBusy ? 'Working...' : 'Create user'}
-              </button>
-            </form>
-          ) : (
-            <form className="auth-form" onSubmit={handleLoginSubmit}>
-              <label>
-                Email
-                <input
-                  type="email"
-                  value={login.email}
-                  onChange={(event) => setLogin({ ...login, email: event.target.value })}
-                  placeholder="jordan@example.com"
-                  required
-                />
-              </label>
-
-              <label>
-                Password
-                <input
-                  type="password"
-                  value={login.password}
-                  onChange={(event) => setLogin({ ...login, password: event.target.value })}
-                  placeholder="Your password"
-                  required
-                />
-              </label>
-
-              <button type="submit" disabled={isBusy}>
-                {isBusy ? 'Working...' : 'Log in'}
-              </button>
-            </form>
-          )}
-        </div>
-
-        <div className="panel accent-panel">
-          <div>
-            <p className="status-label">Next step</p>
-            <h2>Begin account creation</h2>
-            <p className="lede compact">
-              Once a user exists, this section can create the first bank account by
-              sending the returned user id to the backend.
-            </p>
-          </div>
-
-          <form className="auth-form" onSubmit={handleCreateAccount}>
-            <label>
-              Account type
-              <select value={accountType} onChange={(event) => setAccountType(event.target.value)}>
-                <option value="Checking">Checking</option>
-                <option value="Savings">Savings</option>
-              </select>
-            </label>
-
-            <button type="submit" disabled={isBusy || !currentUser}>
-              Create account
-            </button>
-          </form>
-
-          {currentUser ? (
-            <div className="user-chip">
-              <strong>{currentUser.name}</strong>
-              <span>{currentUser.email}</span>
-              <span>ID: {currentUser.id}</span>
-            </div>
-          ) : (
-            <div className="empty-state">
-              Log in first to unlock account creation.
-            </div>
-          )}
-        </div>
+        <AccountPanel
+          currentUser={currentUser}
+          accounts={accounts}
+          selectedAccountId={selectedAccountId}
+          selectedAccount={selectedAccountSummary}
+          accountType={accountType}
+          onAccountTypeChange={setAccountType}
+          depositAmount={depositAmount}
+          onDepositAmountChange={setDepositAmount}
+          withdrawAmount={withdrawAmount}
+          onWithdrawAmountChange={setWithdrawAmount}
+          onCreateAccount={handleCreateAccount}
+          onSelectAccount={handleSelectAccount}
+          onDeposit={handleDeposit}
+          onWithdraw={handleWithdraw}
+          onRefreshAccount={handleRefreshAccount}
+          isBusy={isBusy}
+        />
       </section>
 
-      {message ? (
-        <section className={messageType === 'error' ? 'message error' : 'message success'}>
-          {message}
-        </section>
-      ) : null}
+      <StatusBanner message={message} messageType={messageType} />
     </main>
   )
 }

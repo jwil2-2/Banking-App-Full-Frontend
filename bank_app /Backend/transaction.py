@@ -53,7 +53,7 @@ class Transaction:
         return cls(
             tranType=dc["type"],
             amount=dc["amount"],
-            account_id=dc["account_id"],
-            transaction_id=str(dc["_id"]),
-            created_at=dc.get("created_at"),
+            accountId=dc["account_id"],
+            transactionId=str(dc["_id"]),
+            createdAt=dc.get("created_at"),
         )

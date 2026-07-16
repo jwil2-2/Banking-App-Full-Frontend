@@ -7,11 +7,10 @@ from .transaction import Transaction
 #including associated userId so that each account is connected back to a user
 class Account() :
 
-    #gloabal counter for account Id numbers
-    idCounter = 1
+    
 
     #Initialize account
-    def __init__(self, userId, accountType, balance=None, accountId="") :
+    def __init__(self, userId, accountType, balance=None, accountId="", transactions=None) :
 
         #Storage of account id, balance, account type, associated user id, and creation and storage of empty transaction list
         self.__accountId = accountId
@@ -19,10 +18,12 @@ class Account() :
         self.__accountType = accountType
         self.__userId = userId
 
-        self.__transactions = []
+        # review instances of this list
+        # no longer in use due to transaction repository
+        # review code like dict, or whnever account details returned to get rid of useless code
+        self.__transactions = transactions or []
 
-        #increment of counter for unique account ids across user session
-        Account.idCounter += 1
+    
     
     #method for encapsulation and returning balance
     def getBalance(self) :
@@ -73,6 +74,10 @@ class Account() :
             "userId": self.__userId,
             "accountType": self.__accountType,
             "balance": float(self.__balance),
+            "transactions": [
+                transaction.to_dict() if hasattr(transaction, "to_dict") else transaction
+                for transaction in self.__transactions
+            ],
         }
     
     #mthod for conversion back into account object
@@ -83,6 +88,7 @@ class Account() :
             accountType=dc["accountType"],
             balance=dc["balance"],
             accountId=str(dc["_id"]),
+            transactions=dc.get("transactions", []),
         )
     
     
