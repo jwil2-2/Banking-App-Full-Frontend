@@ -35,4 +35,10 @@ class AccountRepository:
             {"_id": ObjectId(accountId)},
             {"$push": {"transactions": transactionDc}}
         )
+
+    async def getTransactions(self, accountId: str) -> list[dict]:
+        account = await self.getById(accountId)
+        if not account:
+            return []
+        return account.get("transactions", [])
    
