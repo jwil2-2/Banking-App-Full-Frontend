@@ -8,7 +8,6 @@ const emptySignup = {
   name: '',
   email: '',
   password: '',
-  role: 'user',
 }
 
 const emptyLogin = {
