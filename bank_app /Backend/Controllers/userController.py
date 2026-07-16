@@ -1,11 +1,11 @@
-from fastapi import APIRouter
-from decimal import Decimal
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+
+from ..Repositories.userRepository import UserRepository
 from ..Services.userService import UserService
-from ..Repositories.accountRepository import AccountRepository
 
 router = APIRouter(prefix="/api/users", tags=["users"])
-_userRepository = AccountRepository()
+_userRepository = UserRepository()
 _userService = UserService(_userRepository)
 
 #Class that creates and uses API endpoints to initiate CRUD operations
@@ -25,6 +25,10 @@ class UserController:
         password: str
         role: str = Field(pattern="^(user|admin)$")
 
+    class LoginRequest(BaseModel):
+        email: str
+        password: str
+
 
     #initialization of Account service to use
     def __init__(self, service: UserService):
@@ -32,11 +36,25 @@ class UserController:
 
     # Api to create new banking account for user
     @router.post("", response_model=UserOut, status_code=201)
-    async def create_account(payload: CreateUserRequest):
-    # TEMPORARY: user_id as a query param until auth exists (see list_accounts note)
+    async def create_user(payload: CreateUserRequest):
         user = await _userService.createUser(payload.name, payload.email, payload.password, payload.role)
         return UserController.UserOut(
+            id=user.getUserId(),
             name=user.getName(),
             email=user.getEmail(),
             role=user.getRole(),
             )
+
+    @router.post("/login", response_model=UserOut)
+    async def login(payload: LoginRequest):
+        try:
+            user = await _userService.loginUser(payload.email, payload.password)
+        except ValueError as exc:
+            raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+        return UserController.UserOut(
+            id=user.getUserId(),
+            name=user.getName(),
+            email=user.getEmail(),
+            role=user.getRole(),
+        )

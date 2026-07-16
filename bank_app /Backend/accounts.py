@@ -11,7 +11,7 @@ class Account() :
     idCounter = 1
 
     #Initialize account
-    def __init__(self, userId, accountType, balance=None, accountId=None) :
+    def __init__(self, userId, accountType, balance=None, accountId="") :
 
         #Storage of account id, balance, account type, associated user id, and creation and storage of empty transaction list
         self.__accountId = accountId

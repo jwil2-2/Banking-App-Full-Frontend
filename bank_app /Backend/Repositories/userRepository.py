@@ -1,4 +1,6 @@
 
+from bson import ObjectId
+
 from ..db import users_collection
 
 #class resposnible for user data management with calls to mongoDb
@@ -8,6 +10,12 @@ class UserRepository:
     async def create(self, user_dc: dict) -> str:
         result = await users_collection.insert_one(user_dc)
         return str(result.inserted_id)
+
+    async def getByEmail(self, email: str) -> dict | None:
+        return await users_collection.find_one({"email": email})
+
+    async def getById(self, userId: str) -> dict | None:
+        return await users_collection.find_one({"_id": ObjectId(userId)})
      
     #method to get all users from mongoDb
     #do some editing so admin only gets this functionality
