@@ -1,10 +1,11 @@
-# This class is for creation and storage of a user
+# User domain models, validation, and MongoDB serialization.
+
 import re
 
 class User:
+  # Represents an application user and validates registration input.
 
-  # Constructor for user initialization
-  def __init__(self, name, email, password, role="user", userId = None):
+  def __init__(self, name, email, password, role="user", userId=None):
     self.setName(name)
     self.setEmail(email)
     self.setPassword(password)
@@ -12,58 +13,43 @@ class User:
     self.__userId = userId
 
 
-  # Method for encapsulation and returning name
   def getName(self):
     return self.__name
 
-  # Method for encapsulation and returning email
   def getEmail(self):
     return self.__email
 
-  # Method for encapsulation and returning password
   def getPassword(self):
     return self.__password
 
-  # Method for encapsulation and returning userId
   def getUserId(self):
     return self.__userId
   
-  # Method for encapsulation and returning userId
   def getRole(self):
     return self.__role
 
-  # Method for encapsulation and setting email with specific rules
   def setEmail(self, email):
-
-    #pattern to include email domain format (email@gmail.com)
+    # Validate and assign a basic email-address format.
     regex = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
 
-    #comparison for error checking
     if re.fullmatch(regex, email):
       self.__email = email
     else:
       raise ValueError("Email needs to be in correct syntax")
 
-  # Method for encapsulation and setting name 
   def setName(self, name):
-
-    #pattern to include lower and uppercase letters, one hyphen or space, immedietely followed by letters
-    #no numbers allowed
+    # Validate a name containing letters, spaces, apostrophes, or hyphens.
     regex = r"^[a-zA-Z]+([ '-][a-zA-Z]+)*$"
 
-    #comparison for error checking
     if re.fullmatch(regex, name):
       self.__name = name
     else:
       raise ValueError("Name needs to be in correct syntax")
 
-  # Method for encapsulation and setting password with 8+ chars, 1 upper, 1 lower, 1 digit, 1 special char
   def setPassword(self, password):
-
-    #pattern for checking password
+    # Require 8+ characters with upper, lower, digit, and special.
     regex = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
 
-    #comparison for error checking
     if re.fullmatch(regex, password):
       self.__password = password
     else:
@@ -72,11 +58,12 @@ class User:
       )
   
   def setUserId(self, user_id):
-    # called once, after Mongo assigns the real _id on insert
+    # Assign the ID generated after a MongoDB insert.
     self.__userId = user_id
     
-  #Method for converting object to storable text in mongoDB
   def toDict(self) -> dict:
+    # Serialize fields for persistence, excluding the generated ID.
+    # The service replaces the plaintext password with bcrypt before insertion.
     dc = {
       "name": self.__name,
       "email": self.__email,
@@ -85,11 +72,12 @@ class User:
     }
     return dc
   
-  #Method for returning user object from dict in database
   @classmethod
   def fromDict(cls, dc:dict) -> "User":
+    # Build the proper user subtype from a MongoDB document.
+    # Bypass __init__ so stored bcrypt hashes are not validated as plaintext.
     targetCls = AdminUser if dc.get("role") == "admin" else User
-    user = targetCls.__new__(targetCls) # bypass __init__, avoids re-validating/re-hashing
+    user = targetCls.__new__(targetCls)
     user._User__name = dc["name"]
     user._User__email = dc["email"]
     user._User__password = dc["password"]
@@ -98,14 +86,8 @@ class User:
     return user
 
 
-#Subclass of user to give special methods to users who are admins 
-# (work in progress)
 class AdminUser(User):
+    # User subtype whose role is always admin.
+
     def __init__(self, name, email, password):
         super().__init__(name, email, password, role="admin")
-
-
-
-
-
-

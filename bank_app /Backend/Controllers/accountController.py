@@ -1,3 +1,6 @@
+# Authenticated account, balance, and transaction API routes.
+# Users access their own accounts; admins may access any user's accounts.
+
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,6 +19,8 @@ _accountService = AccountService(_accountRepository, _transactionRepository)
 
 
 async def _ensure_account_access(account_id: str, current_user: CurrentUser):
+    # Load an account and enforce owner-or-admin access.
+    # Missing accounts return 404 and unauthorized access returns 403.
     try:
         account = await _accountService.getAccountById(account_id)
     except ValueError as exc:
@@ -27,16 +32,20 @@ async def _ensure_account_access(account_id: str, current_user: CurrentUser):
     return account
 
 
-# Class that actually creates and calls API endpoints which initiates CRUD
 class AccountController:
+    # Namespace for account API schemas and protected route handlers.
 
     class AccountOut(BaseModel):
+        # Summary returned after account reads and balance changes.
+
         id: str
         account_type: str
         user_id: str
         balance: Decimal
 
     class TransactionOut(BaseModel):
+        # Serialized transaction returned to API clients.
+
         account_id: str
         type: str
         amount: Decimal
@@ -56,6 +65,7 @@ class AccountController:
         current_user: CurrentUser = Depends(get_current_user),
         userId: str | None = None,
     ):
+        # List the current user's accounts, or an admin-selected user's.
         target_user_id = current_user.id
         if current_user.role == "admin" and userId:
             target_user_id = userId
@@ -76,6 +86,7 @@ class AccountController:
         payload: CreateAccountRequest,
         current_user: CurrentUser = Depends(get_current_user),
     ):
+        # Create an account owned by the authenticated user.
         account = await _accountService.createAccount(current_user.id, payload.account_type)
         account_id = account.getAccountId()
         if not account_id:
@@ -92,6 +103,7 @@ class AccountController:
         account_id: str,
         current_user: CurrentUser = Depends(get_current_user),
     ):
+        # Return account metadata and transactions after access checks.
         await _ensure_account_access(account_id, current_user)
 
         try:
@@ -120,6 +132,7 @@ class AccountController:
         account_id: str,
         current_user: CurrentUser = Depends(get_current_user),
     ):
+        # Return authorized account transactions in chronological order.
         await _ensure_account_access(account_id, current_user)
 
         try:
@@ -143,6 +156,7 @@ class AccountController:
         payload: AmountRequest,
         current_user: CurrentUser = Depends(get_current_user),
     ):
+        # Deposit a positive amount into an authorized account.
         await _ensure_account_access(account_id, current_user)
 
         try:
@@ -163,6 +177,7 @@ class AccountController:
         payload: AmountRequest,
         current_user: CurrentUser = Depends(get_current_user),
     ):
+        # Withdraw available funds from an authorized account.
         await _ensure_account_access(account_id, current_user)
 
         try:

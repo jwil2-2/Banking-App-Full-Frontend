@@ -1,9 +1,12 @@
-# Class to keep up with user transactions in bank app
+# Transaction domain model and MongoDB serialization helpers.
+
 from decimal import Decimal
 from datetime import datetime, timezone
 
 
 class Transaction:
+    # Represents a deposit or withdrawal for one account.
+    # New transactions receive a timezone-aware UTC timestamp.
 
     #constructor for initialization of a transaction
     def __init__(self, tranType, amount, accountId, createdAt=None) :
@@ -30,6 +33,7 @@ class Transaction:
     
     #method to convert transaction object into storable text object for mongoDb
     def to_dict(self) -> dict:
+        # Serialize using the transaction collection's field names.
         return {
             "account_id": self.__accountId,
             "type": self.__tranType,
@@ -40,6 +44,7 @@ class Transaction:
     #method for conversion of mongoDb text object back to transaction object
     @classmethod
     def from_dict(cls, dc: dict) -> "Transaction":
+        # Build a transaction from a MongoDB document.
         return cls(
             tranType=dc["type"],
             amount=dc["amount"],
