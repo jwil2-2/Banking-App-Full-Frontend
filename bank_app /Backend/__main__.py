@@ -1,3 +1,6 @@
+# FastAPI entry point that mounts the user and account routers.
+# CORS origins come from the comma-separated FRONTEND_ORIGINS variable.
+
 import os
 
 from fastapi import FastAPI
