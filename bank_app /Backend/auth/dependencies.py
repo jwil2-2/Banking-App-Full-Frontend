@@ -1,3 +1,5 @@
+# FastAPI dependencies for Bearer-token authentication and role checks.
+
 from typing import Callable
 
 import jwt
@@ -16,6 +18,9 @@ _user_repository = UserRepository()
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
 ) -> CurrentUser:
+    # Authenticate a Bearer token and return the current database identity.
+    # Reload user fields from MongoDB so role changes and deletions take effect
+    # without waiting for an otherwise valid token to expire.
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -50,6 +55,8 @@ async def get_current_user(
 
 
 def require_roles(*allowed_roles: str) -> Callable:
+    # Build a dependency that permits only the listed roles.
+    # Authentication failures return 401; insufficient roles return 403.
     async def _checker(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
         if current_user.role not in allowed_roles:
             raise HTTPException(

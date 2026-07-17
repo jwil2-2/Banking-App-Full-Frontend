@@ -1,16 +1,12 @@
+# Account domain model and MongoDB serialization helpers.
 
 from decimal import Decimal
 
-#Class for creation of account objects
-#including associated userId so that each account is connected back to a user
-class Account() :
+class Account:
+    # Represents one user-owned checking or savings account.
+    # Balances use Decimal in the app and floats in MongoDB documents.
 
-    
-
-    #Initialize account
-    def __init__(self, userId, accountType, balance=None, accountId="") :
-
-        #Storage of account id, balance, account type, and associated user id
+    def __init__(self, userId, accountType, balance=None, accountId=""):
         self.__accountId = accountId
         self.__balance = Decimal(str(balance)) if balance is not None else Decimal("0.00")
         self.__accountType = accountType
@@ -22,8 +18,8 @@ class Account() :
     def getBalance(self) :
         return self.__balance
     
-    #pmethod for encapsulation and setting balance
-    def setBalance(self, amount) :
+    def setBalance(self, amount):
+        # Apply a positive or negative delta to the current balance.
         self.__balance += amount
     
     #method for encapsulation and returning account type
@@ -41,6 +37,7 @@ class Account() :
     
     #method for encapsulation and showcase of current account details
     def getAccountDetails(self):
+        # Return the service-layer account detail structure.
         return {
             "Account ID": self.__accountId,
             "Account Type": self.__accountType,
@@ -49,28 +46,25 @@ class Account() :
         }
     
     def setAccountId(self, account_id):
-        # called once, after Mongo assigns the real _id on insert
+        # Assign the ID generated after a MongoDB insert.
         self.__accountId = account_id
 
     #method for conversion of account object to storable strings for mongo
     def toDict(self) -> dict:
+        # Serialize the account for MongoDB, excluding its generated ID.
         return {
             "userId": self.__userId,
             "accountType": self.__accountType,
             "balance": float(self.__balance),
         }
     
-    #mthod for conversion back into account object
+    #method for conversion back into account object
     @classmethod
     def fromDict(cls, dc: dict) -> "Account":
+        # Build an account from a MongoDB document.
         return cls(
             userId=dc["userId"],
             accountType=dc["accountType"],
             balance=dc["balance"],
             accountId=str(dc["_id"]),
         )
-    
-    
-
-    
-   
